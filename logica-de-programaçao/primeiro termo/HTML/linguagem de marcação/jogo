@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Plataforma 2D - 9 Fases</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #87ceeb;
+        }
+        canvas {
+            display: block;
+            margin: auto;
+            background: linear-gradient(#87ceeb, #e6f7ff);
+            border: 2px solid #333;
+        }
+    </style>
+</head>
+<body>
+<canvas id="game" width="900" height="500"></canvas>
+<script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const gravity = 0.6;
+    const player = {
+        x: 50,
+        y: 100,
+        width: 40,
+        height: 50,
+        vx: 0,
+        vy: 0,
+        speed: 5,
+        jump: -12,
+        grounded: false
+    };
+    const keys = {};
+    document.addEventListener("keydown", e => {
+        keys[e.code] = true;
+    });
+    document.addEventListener("keyup", e => {
+        keys[e.code] = false;
+    });
+    let currentLevel = 0;
+    const levels = [
+        /* FASE 1 */
+        {
+            platforms: [
+                { x: 0, y: 350, width: 800, height: 50 },
+                { x: 250, y: 280, width: 120, height: 20 },
+                { x: 450, y: 220, width: 120, height: 20 }
+            ],
+            goal: { x: 700, y: 170, width: 30, height: 50 },
+            enemies: [],
+            spikes: []
+        },
+        /* FASE 2 */
+        {
+            platforms: [
+                { x: 0, y: 350, width: 200, height: 50 },
+                { x: 250, y: 300, width: 100, height: 20 },
+                { x: 400, y: 250, width: 100, height: 20 },
+                { x: 550, y: 200, width: 100, height: 20 },
+                { x: 700, y: 150, width: 100, height: 20 }
+            ],
+            goal: { x: 740, y: 100, width: 30, height: 50 },
+            enemies: [],
+            spikes: []
+        },
+        /* FASE 3 */
+        {
+            platforms: [
+                { x: 0, y: 350, width: 150, height: 50 },
+                { x: 200, y: 300, width: 80, height: 20 },
+                { x: 350, y: 260, width: 80, height: 20 },
+                { x: 500, y: 220, width: 80, height: 20 },
+                { x: 650, y: 180, width: 80, height: 20 }
+            ],
+            goal: { x: 700, y: 130, width: 30, height: 50 },
+            enemies: [],
+            spikes: [
+                { x: 280, y: 335, width: 50, height: 15 }
+            ]
+        },
+        /* FASE 4 */
+        {
+            platforms: [
+                { x: 0, y: 350, width: 120, height: 50 },
+                { x: 180, y: 300, width: 100, height: 20 },
+                { x: 340, y: 250, width: 100, height: 20 },
+                { x: 500, y: 200, width: 100, height: 20 },
+                { x: 680, y: 150, width: 120, height: 20 }
+            ],
+            goal: { x: 740, y: 100, width: 30, height: 50 },
+            enemies: [
+                {
+                    x: 220,
+                    y: 280,
+                    width: 25,
+                    height: 20,
+                    minX: 180,
+                    maxX: 280,
+                    speed: 2
+                }
+            ],
+            spikes: []
+        },
+        /* FASE 5 */
+        {
+            platforms: [
+                { x: 0, y: 350, width: 150, height: 50 },
+                { x: 250, y: 320, width: 80, height: 20 },
+                { x: 400, y: 260, width: 80, height: 20 },
+                { x: 550, y: 200, width: 80, height: 20 },
+                { x: 700, y: 140, width: 100, height: 20 }
+            ],
+            goal: { x: 740, y: 90, width: 30, height: 50 },
+            enemies: [
+                {
+                    x: 420,
+                    y: 240,
+                    width: 25,
+                    height: 20,
+                    minX: 400,
+                    maxX: 480,
+                    speed: 3
+                },
+                {
+                    x: 570,
+                    y: 180,
+                    width: 25,
+                    height: 20,
+                    minX: 550,
+                    maxX: 630,
+                    speed: 2
+                }
+            ],
+            spikes: [
+                { x: 340, y: 335, width: 60, height: 15 }
+            ]
+        },
+        /* FASE 6 */
+        {
+            platforms: [
+                { x: 0, y: 350, width: 150, height: 50 },
+                { x: 200, y: 300, width: 120, height: 20 },
+                { x: 380, y: 240, width: 120, height: 20 },
+                { x: 560, y: 180, width: 120, height: 20 },
+                { x: 680, y: 120, width: 120, height: 20 }
+            ],
+            goal: { x: 740, y: 70, width: 30, height: 50 },
+            enemies: [
+                {
+                    x: 220,
+                    y: 280,
+                    width: 25,
+                    height: 20,
+                    minX: 200,
+                    maxX: 320,
+                    speed: 2
+                },
+                {
+                    x: 580,
+                    y: 160,
+                    width: 25,
+                    height: 20,
+                    minX: 560,
+                    maxX: 680,
+                    speed: 2
+                }
+            ],
+            spikes: [
+                { x: 330, y: 335, width: 60, height: 15 }
+            ]
+        },
+        /* FASE 7 */
+        {
+            platforms: [
+                { x: 0, y: 350, width: 120, height: 50 },
+                { x: 170, y: 300, width: 100, height: 20 },
+                { x: 320, y: 260, width: 100, height: 20 },
+                { x: 470, y: 220, width: 100, height: 20 },
+                { x: 620, y: 180, width: 100, height: 20 }
+            ],
+            goal: { x: 670, y: 130, width: 30, height: 50 },
+            enemies: [
+                {
+                    x: 340,
+                    y: 240,
+                    width: 25,
+                    height: 20,
+                    minX: 320,
+                    maxX: 420,
+                    speed: 2
+                }
+            ],
+            spikes: [
+                { x: 130, y: 335, width: 50, height: 15 },
+                { x: 550, y: 335, width: 50, height: 15 }
+            ]
+        },
+        /* FASE 8 */
+        {
+            platforms: [
+                { x: 0, y: 350, width: 150, height: 50 },
+                { x: 220, y: 320, width: 120, height: 20 },
+                { x: 420, y: 260, width: 120, height: 20 },
+                { x: 650, y: 200, width: 120, height: 20 }
+            ],
+            goal: { x: 720, y: 150, width: 30, height: 50 },
+            enemies: [
+                {
+                    x: 240,
+                    y: 300,
+                    width: 25,
+                    height: 20,
+                    minX: 220,
+                    maxX: 340,
+                    speed: 3
+                },
+                {
+                    x: 440,
+                    y: 240,
+                    width: 25,
+                    height: 20,
+                    minX: 420,
+                    maxX: 540,
+                    speed: 3
+                }
+            ],
+            spikes: [
+                { x: 360, y: 335, width: 80, height: 15 }
+            ]
+        },
+        /* FASE 9 (FINAL) */
+        {
+            platforms: [
+                { x: 0, y: 350, width: 120, height: 50 },
+                { x: 180, y: 300, width: 90, height: 20 },
+                { x: 330, y: 250, width: 90, height: 20 },
+                { x: 480, y: 200, width: 90, height: 20 },
+                { x: 630, y: 150, width: 90, height: 20 }
+            ],
+            goal: { x: 700, y: 100, width: 30, height: 50 },
+            enemies: [
+                {
+                    x: 190,
+                    y: 280,
+                    width: 25,
+                    height: 20,
+                    minX: 180,
+                    maxX: 270,
+                    speed: 3
+                },
+                {
+                    x: 340,
+                    y: 230,
+                    width: 25,
+                    height: 20,
+                    minX: 330,
+                    maxX: 420,
+                    speed: 3
+                },
+                {
+                    x: 490,
+                    y: 180,
+                    width: 25,
+                    height: 20,
+                    minX: 480,
+                    maxX: 570,
+                    speed: 3
+                }
+            ],
+            spikes: [
+                { x: 130, y: 335, width: 40, height: 15 },
+                { x: 280, y: 335, width: 40, height: 15 },
+                { x: 430, y: 335, width: 40, height: 15 },
+                { x: 580, y: 335, width: 40, height: 15 }
+            ]
+        }
+    ]; // <-- FECHAMENTO DO ARRAY QUE ESTAVA FALTANDO
+    // FUNÇÃO QUE ESTAVA FALTANDO
+    function resetPlayer() {
+        player.x = 50;
+        player.y = 100;
+        player.vx = 0;
+        player.vy = 0;
+        player.grounded = false;
+    }
+    function update() {
+        const level = levels[currentLevel];
+        player.vx = 0;
+        if (keys["ArrowLeft"]) player.vx = -player.speed;
+        if (keys["ArrowRight"]) player.vx = player.speed;
+        if (keys["Space"] && player.grounded) {
+            player.vy = player.jump;
+            player.grounded = false;
+        }
+        player.vy += gravity;
+        player.x += player.vx;
+        player.y += player.vy;
+        player.grounded = false;
+        // colisão plataformas
+        for (const p of level.platforms) {
+            if (
+                player.x < p.x + p.width &&
+                player.x + player.width > p.x &&
+                player.y < p.y + p.height &&
+                player.y + player.height > p.y
+            ) {
+                if (player.vy > 0) {
+                    player.y = p.y - player.height;
+                    player.vy = 0;
+                    player.grounded = true;
+                }
+            }
+        }
+        // espinhos
+        for (const spike of level.spikes) {
+            if (
+                player.x < spike.x + spike.width &&
+                player.x + player.width > spike.x &&
+                player.y < spike.y + spike.height &&
+                player.y + player.height > spike.y
+            ) {
+                resetPlayer();
+            }
+        }
+        // inimigos
+        for (const enemy of level.enemies) {
+            enemy.x += enemy.speed;
+            if (
+                enemy.x <= enemy.minX ||
+                enemy.x + enemy.width >= enemy.maxX
+            ) {
+                enemy.speed *= -1;
+            }
+            if (
+                player.x < enemy.x + enemy.width &&
+                player.x + player.width > enemy.x &&
+                player.y < enemy.y + enemy.height &&
+                player.y + player.height > enemy.y
+            ) {
+                resetPlayer();
+            }
+        }
+        // cair do mapa
+        if (player.y > canvas.height + 100) {
+            resetPlayer();
+        }
+        // limites
+        if (player.x < 0) player.x = 0;
+        if (player.x + player.width > canvas.width) {
+            player.x = canvas.width - player.width;
+        }
+        // chegada
+        const goal = level.goal;
+        if (
+            player.x < goal.x + goal.width &&
+            player.x + player.width > goal.x &&
+            player.y < goal.y + goal.height &&
+            player.y + player.height > goal.y
+        ) {
+            currentLevel++;
+            if (currentLevel >= levels.length) {
+                setTimeout(() => {
+                    alert("🏆 PARABÉNS! VOCÊ ZEROU O JOGO!");
+                }, 100);
+                currentLevel = 0;
+            }
+            resetPlayer();
+        }
+    }
+    function draw() {
+        const level = levels[currentLevel];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // plataformas
+        ctx.fillStyle = "#228B22";
+        for (const p of level.platforms) {
+            ctx.fillRect(p.x, p.y, p.width, p.height);
+        }
+        // espinhos
+        ctx.fillStyle = "red";
+        for (const spike of level.spikes) {
+            ctx.beginPath();
+            ctx.moveTo(spike.x, spike.y + spike.height);
+            ctx.lineTo(spike.x + spike.width / 2, spike.y);
+            ctx.lineTo(spike.x + spike.width, spike.y + spike.height);
+            ctx.fill();
+        }
+        // inimigos
+        ctx.fillStyle = "purple";
+        for (const enemy of level.enemies) {
+            ctx.fillRect(
+                enemy.x,
+                enemy.y,
+                enemy.width,
+                enemy.height
+            );
+        }
+        // bandeira
+        ctx.fillStyle = "gold";
+        ctx.fillRect(
+            level.goal.x,
+            level.goal.y,
+            level.goal.width,
+            level.goal.height
+        );
+        // jogador
+        ctx.fillStyle = "#ff4444";
+        ctx.fillRect(
+            player.x,
+            player.y,
+            player.width,
+            player.height
+        );
+        // interface - CORRIGIDO PARA MOSTRAR 9 FASES
+        ctx.fillStyle = "black";
+        ctx.font = "22px Arial";
+        ctx.fillText(
+            "Fase " + (currentLevel + 1) + " / " + levels.length,
+            20,
+            30
+        );
+        ctx.font = "16px Arial";
+        ctx.fillText(
+            "← → mover | Espaço pular",
+            20,
+            55
+        );
+        ctx.fillText(
+            "Pegue a bandeira dourada",
+            20,
+            80
+        );
+        ctx.fillStyle = "purple";
+        ctx.fillText("■ Inimigo", 20, 110);
+        ctx.fillStyle = "red";
+        ctx.fillText("▲ Espinho", 20, 135);
+    }
+    function gameLoop() {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
+    gameLoop();
+</script>
+</body>
+</html>
